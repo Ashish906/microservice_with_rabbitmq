@@ -1,0 +1,58 @@
+# version: '3.8'
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  mongo-db:
+    image: mongo:latest
+    container_name: mongo-db
+    ports:
+      - "27018:27017"
+    volumes:
+      - db_data:/data/db
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile.dev
+    container_name: auth-service
+    command: npm run start:dev
+    volumes:
+      - ./auth-service:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "3001:3001"
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      MONGO_URL: mongodb://mongo-db:27018/ecommerce
+    depends_on:
+      - rabbitmq
+      - mongo-db
+
+  product-service:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile.dev
+    container_name: product-service
+    command: npm run start:dev
+    volumes:
+      - ./product-service:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "3002:3002"
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      MONGO_URL: mongodb://mongo-db:27018/ecommerce
+    depends_on:
+      - rabbitmq
+      - mongo-db
+
+volumes:
+  db_data:
