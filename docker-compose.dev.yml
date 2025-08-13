@@ -14,7 +14,7 @@ services:
     image: mongo:latest
     container_name: mongo-db
     ports:
-      - "27018:27017"
+      - "27017:27017"
     volumes:
       - db_data:/data/db
 
@@ -29,9 +29,9 @@ services:
       - /usr/src/app/node_modules
     ports:
       - "3001:3001"
-    environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-      MONGO_URL: mongodb://mongo-db:27018/ecommerce
+    # environment:
+    #   RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    #   MONGO_URL: mongodb://mongo-db:27017/ecommerce
     depends_on:
       - rabbitmq
       - mongo-db
@@ -47,9 +47,9 @@ services:
       - /usr/src/app/node_modules
     ports:
       - "3002:3002"
-    environment:
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
-      MONGO_URL: mongodb://mongo-db:27018/ecommerce
+    # environment:
+    #   RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+    #   MONGO_URL: mongodb://mongo-db:27017/ecommerce
     depends_on:
       - rabbitmq
       - mongo-db

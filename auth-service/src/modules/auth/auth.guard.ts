@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { UserModel } from '../users/models/user.model';
+import { User } from '../users/models/user.model';
 import { InjectModel } from 'nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 
@@ -9,8 +9,8 @@ import { ReturnModelType } from '@typegoose/typegoose';
 export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
-    @InjectModel(UserModel)
-    private readonly userModel: ReturnModelType<typeof UserModel>,
+    @InjectModel(User)
+    private readonly userModel: ReturnModelType<typeof User>,
   ) {}
 
   async canActivate(

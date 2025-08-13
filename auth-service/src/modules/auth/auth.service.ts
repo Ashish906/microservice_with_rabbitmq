@@ -1,9 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
-import { User, UserModel } from '../users/models/user.model';
+import { User } from '../users/models/user.model';
 import { InjectModel } from 'nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 
@@ -11,7 +11,7 @@ import { ReturnModelType } from '@typegoose/typegoose';
 export class AuthService {
   constructor(
     private jwtService: JwtService,
-    @InjectModel(UserModel) private userEntityModel: ReturnModelType<typeof UserModel>,
+    @InjectModel(User) private userEntityModel: ReturnModelType<typeof User>,
   ) {}
 
 
@@ -19,7 +19,7 @@ export class AuthService {
     const user = await this.userEntityModel.findOne({
         email: body.email,
         is_active: true
-    });
+    }).select('+password');
     if (!user) {
       throw new HttpException('Unauthorized', HttpStatus.BAD_REQUEST);
     }
@@ -74,7 +74,7 @@ export class AuthService {
     });
 
     const refreshToken = await this.jwtService.signAsync({ sub: user._id }, {
-      secret: process.env.JWT_SECRET,
+      secret: process.env.REFRESH_JWT_SECRET,
       expiresIn: process.env.REFRESH_TOKEN_EXPIRE
     });
 
@@ -82,5 +82,31 @@ export class AuthService {
       access_token: accessToken,
       refresh_token: refreshToken,
     }
+  }
+
+  async validateToken(token: string) {
+    if (!token) {
+      throw new UnauthorizedException();
+    }
+    let payload = null;
+    try {
+      payload = await this.jwtService.verifyAsync(
+        token,
+        {
+          secret: process.env.JWT_SECRET
+        }
+      );
+    } catch {
+      throw new UnauthorizedException();
+    }
+    const user = await this.userEntityModel.findOne({
+        _id: payload.sub,
+        is_active: true
+    });
+    if(!user) {
+      throw new UnauthorizedException();
+    }
+
+    return { ...payload, ...user };
   }
 }

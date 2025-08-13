@@ -6,15 +6,15 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { UserModel } from '../users/models/user.model';
+import { User } from '../users/models/user.model';
 import { InjectModel } from 'nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {
   constructor(
-    @InjectModel(UserModel)
-    private readonly userModel: ReturnModelType<typeof UserModel>,
+    @InjectModel(User)
+    private readonly userModel: ReturnModelType<typeof User>,
     private jwtService: JwtService,
   ) {}
 
@@ -24,14 +24,14 @@ export class RefreshTokenGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
     if (!token) {
-      throw new BadRequestException();
+      throw new BadRequestException('Token not provided!');
     }
     let payload = null;
     try {
       payload = await this.jwtService.verifyAsync(
         token,
         {
-          secret: process.env.JWT_SECRET
+          secret: process.env.REFRESH_JWT_SECRET
         }
       );
     } catch {

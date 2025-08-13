@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenGuard } from './refresh-token.guard';
+import { MessagePattern } from '@nestjs/microservices';
 
 @Controller('auth')
 export class AuthController {
@@ -22,5 +23,11 @@ export class AuthController {
   @Get('refresh-token')
   refreshToken(@Request() req: any) {
     return this.authService.refreshToken(req.user)
+  }
+
+  @MessagePattern({ cmd: 'validate_token' })
+  async validateToken(data: { token: string }) {
+    console.log('Validating token:', data.token);
+    return this.authService.validateToken(data.token);
   }
 }
