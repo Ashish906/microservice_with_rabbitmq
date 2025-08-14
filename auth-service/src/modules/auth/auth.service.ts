@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -6,12 +6,15 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '../users/models/user.model';
 import { InjectModel } from 'nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
     @InjectModel(User) private userEntityModel: ReturnModelType<typeof User>,
+
+    @Inject('USER_SERVICE') private readonly userServiceClient: ClientProxy, // Assuming this is a client proxy for user service
   ) {}
 
 
@@ -32,8 +35,11 @@ export class AuthService {
     const { access_token, refresh_token } = await this.getTokens(user);
 
     return {
-      access_token,
-      refresh_token
+      message: 'Login successful',
+      data: {
+        access_token,
+        refresh_token
+      }
     }
   }
 
@@ -50,15 +56,23 @@ export class AuthService {
 
     delete newUser.password;
 
-    return newUser;
+    this.userServiceClient.emit('user_created', newUser);
+
+    return {
+      message: 'User registered successfully',
+      data: newUser
+    };
   }
 
   async refreshToken(payload: any) {
     const { access_token, refresh_token } = await this.getTokens(payload);
 
     return {
-      access_token,
-      refresh_token
+      message: 'Tokens refreshed successfully',
+      data: {
+        access_token,
+        refresh_token
+      }
     }
   }
 
@@ -86,7 +100,10 @@ export class AuthService {
 
   async validateToken(token: string) {
     if (!token) {
-      throw new UnauthorizedException();
+      throw new RpcException({
+        status: HttpStatus.UNAUTHORIZED,
+        message: 'Token not provided!'
+      });
     }
     let payload = null;
     try {
@@ -97,14 +114,20 @@ export class AuthService {
         }
       );
     } catch {
-      throw new UnauthorizedException();
+      throw new RpcException({
+        status: HttpStatus.UNAUTHORIZED,
+        message: 'Invalid token!'
+      });
     }
     const user = await this.userEntityModel.findOne({
         _id: payload.sub,
         is_active: true
     });
     if(!user) {
-      throw new UnauthorizedException();
+      throw new RpcException({
+        status: HttpStatus.UNAUTHORIZED,
+        message: 'User not found!'
+      });
     }
 
     return { ...payload, ...user };

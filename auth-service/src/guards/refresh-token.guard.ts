@@ -1,16 +1,21 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { User } from '../users/models/user.model';
 import { InjectModel } from 'nestjs-typegoose';
 import { ReturnModelType } from '@typegoose/typegoose';
+import { User } from 'src/modules/users/models/user.model';
 
 @Injectable()
-export class AuthGuard implements CanActivate {
+export class RefreshTokenGuard implements CanActivate {
   constructor(
-    private jwtService: JwtService,
     @InjectModel(User)
     private readonly userModel: ReturnModelType<typeof User>,
+    private jwtService: JwtService,
   ) {}
 
   async canActivate(
@@ -19,25 +24,25 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
     if (!token) {
-      throw new UnauthorizedException();
+      throw new BadRequestException('Token not provided!');
     }
     let payload = null;
     try {
       payload = await this.jwtService.verifyAsync(
         token,
         {
-          secret: process.env.JWT_SECRET
+          secret: process.env.REFRESH_JWT_SECRET
         }
       );
     } catch {
-      throw new UnauthorizedException();
+      throw new BadRequestException();
     }
     const user = await this.userModel.findOne({
         _id: payload.sub,
         is_active: true
     });
     if(!user) {
-      throw new UnauthorizedException();
+      throw new BadRequestException();
     }
 
     request['user'] = { ...payload, ...user };

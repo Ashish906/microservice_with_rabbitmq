@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, HttpException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
@@ -14,15 +14,12 @@ export class AuthGuard implements CanActivate {
   ): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
-    if (!token) {
-      throw new UnauthorizedException();
-    }
-
     let payload = null;
+
     try {
-        payload = await firstValueFrom(this.authService.send({ cmd: 'validate_token' }, { token }));
+        payload = await firstValueFrom(this.authService.send({ cmd: 'validate_token' }, { token }))
     } catch(error) {
-        throw error;
+      throw new HttpException(error.message, error.status);
     }
 
     request['user'] = payload;

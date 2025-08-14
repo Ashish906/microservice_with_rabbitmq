@@ -4,6 +4,7 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { User } from '../users/models/user.model';
 import { TypegooseModule } from 'nestjs-typegoose';
+import { UserClientModule } from '../rabbit-queues/user-client.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { TypegooseModule } from 'nestjs-typegoose';
       signOptions: {
         expiresIn: process.env.JWT_EXPIRE,
       }
-    })
+    }),
+    UserClientModule
   ],
   controllers: [AuthController],
   providers: [

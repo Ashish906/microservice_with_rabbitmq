@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common'
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { RefreshTokenGuard } from './refresh-token.guard';
+import { RefreshTokenGuard } from '../../guards/refresh-token.guard';
 import { MessagePattern } from '@nestjs/microservices';
 
 @Controller('auth')
@@ -27,7 +27,6 @@ export class AuthController {
 
   @MessagePattern({ cmd: 'validate_token' })
   async validateToken(data: { token: string }) {
-    console.log('Validating token:', data.token);
     return this.authService.validateToken(data.token);
   }
 }

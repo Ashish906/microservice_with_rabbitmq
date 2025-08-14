@@ -18,15 +18,27 @@ export class ProductService {
       owner_id: payload.sub,
     });
 
-    return product;
+    return {
+      message: 'Product created successfully',
+      data: product
+    };
   }
 
-  findAll() {
-    return this.productModel.find().select(['_id', 'name', 'description', 'price']);
+  async findAll() {
+    const products = await this.productModel.find().select(['_id', 'name', 'description', 'price']);
+    return {
+      message: 'Products retrieved successfully',
+      data: products
+    };
   }
 
-  findOne(id: string) {
-    return this.productModel.findOne({ _id: id }).select(['_id', 'name', 'description', 'price']);
+  async findOne(id: string) {
+    const product = await this.productModel.findOne({ _id: id }).select(['_id', 'name', 'description', 'price']);
+
+    return {
+      message: 'Product retrieved successfully',
+      data: product
+    }
   }
 
   async update(id: string, updateProductDto: UpdateProductDto, payload: any) {
@@ -40,7 +52,9 @@ export class ProductService {
       throw new BadRequestException('Product cannot be updated');
     }
 
-    return 'Product updated successfully';
+    return {
+      message: 'Product updated successfully'
+    };
   }
 
   async remove(id: string, payload: any) {
@@ -53,6 +67,8 @@ export class ProductService {
       throw new BadRequestException('Product cannot be deleted');
     }
 
-    return 'Product deleted successfully';
+    return {
+      message: 'Product deleted successfully'
+    }
   }
 }

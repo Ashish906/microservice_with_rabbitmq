@@ -1,9 +1,13 @@
-import { Controller, Get, UseGuards, Request, Post, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { AuthGuard } from '../auth/auth.guard';
+import { EventPattern } from '@nestjs/microservices';
 
 @Controller('users')
-@UseGuards(AuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @EventPattern('user_created')
+  async handleUserCreatedEvent(data: any) {
+    console.log(`Welcome ${data.email}, your account has been created successfully!`);
+  }
 }
