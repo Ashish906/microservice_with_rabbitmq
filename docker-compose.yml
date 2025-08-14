@@ -21,9 +21,8 @@ services:
   auth-service:
     build:
       context: ./auth-service
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     container_name: auth-service
-    command: npm run start:dev
     volumes:
       - ./auth-service:/usr/src/app
       - /usr/src/app/node_modules
@@ -39,9 +38,8 @@ services:
   product-service:
     build:
       context: ./product-service
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     container_name: product-service
-    command: npm run start:dev
     volumes:
       - ./product-service:/usr/src/app
       - /usr/src/app/node_modules
